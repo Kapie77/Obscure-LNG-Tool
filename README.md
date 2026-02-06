@@ -1,9 +1,7 @@
 <h1 align="center">Obscure LNG Tool</h1>
 
-<p align="center">
 A unified command-line and drag & drop tool to **extract and rebuild `.lng` language files**
 from **Obscure (2004)** and **Obscure II: The Aftermath (2007)**.
-</p>
 
 ---
 
