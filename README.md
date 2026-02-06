@@ -3,7 +3,14 @@
 A unified command-line and drag & drop tool to **extract and rebuild `.lng` language files**
 from **Obscure (2004)** and **Obscure II: The Aftermath (2007)**.
 
-Designed for translators, modders and preservation projects.
+---
+
+## 📦 Supported Games
+
+| Game | Status |
+|-----|------|
+| Obscure (2004) | Steam ✅ |
+| Obscure II: The Aftermath (2007) | Steam ✅ |
 
 ---
 
@@ -19,15 +26,6 @@ Designed for translators, modders and preservation projects.
 - Font-aware character normalization (game-compatible glyph mapping)
 - **Drag & Drop support** (Windows-friendly)
 - Cross-language friendly (UTF-8 / Windows-1252)
-
----
-
-## 📦 Supported Games
-
-| Game | Status |
-|-----|------|
-| Obscure (2004) | ✅ Full support |
-| Obscure II: The Aftermath (2007) | ✅ Full support |
 
 ---
 
@@ -57,18 +55,21 @@ Just **drag a file onto the executable or Python script**.
 #### Extract – Obscure 1
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format csv
-python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format both
-Rebuild – Obscure 1
-python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 --original LANGUAGE.lng
-Extract – Obscure 2
-python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format csv
-python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format both
-Rebuild – Obscure 2
-python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2
-Optional null-terminator:
-python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2 --add-null
+python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format both``
 
-🧠 How It Works
+#### Rebuild – Obscure 1
+``python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 --original LANGUAGE.lng``
+
+#### Extract – Obscure 2
+``python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format csv
+python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format both``
+
+#### Rebuild – Obscure 2
+``python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2
+Optional null-terminator:
+python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2 --add-null``
+
+## How It Works
 Obscure 1
 Scans the .lng file for null-terminated strings
 Preserves:
@@ -78,7 +79,7 @@ File size
 Uses Windows-1252 compatible encoding
 Prevents buffer overflows automatically
 
-Obscure 2
+### Obscure 2
 Parses:
 Language code
 Groups
@@ -94,7 +95,7 @@ Automatically normalizes unsupported characters
 Replaces invalid glyphs with closest valid alternatives
 Prevents broken text in-game
 
-⚠️ Notes & Limitations
+## Notes & Limitations
 Obscure 1 requires the original .lng file for rebuilding
 Do not exceed original string lengths in Obscure 1
 Always test translations in-game
