@@ -55,6 +55,11 @@ Just **drag a file onto the executable or Python script**.
 #### Extract – Obscure 1
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format csv
+```
+```bash
+python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format txt
+```
+```
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format both
 ```
 
@@ -66,13 +71,20 @@ python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 --orig
 #### Extract – Obscure 2
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format csv
+```
+```bash
+python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format txt
+```
+```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format both
 ```
 
 #### Rebuild – Obscure 2
 ```bash
 python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2
+```
 Optional null-terminator:
+```
 python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2 --add-null
 ```
 
@@ -103,7 +115,7 @@ Replaces invalid glyphs with closest valid alternatives
 Prevents broken text in-game
 
 ## Notes & Limitations
-Obscure 1 requires the original .lng file for rebuilding
-Do not exceed original string lengths in Obscure 1
-Always test translations in-game
-Backup original files before rebuilding
+- Obscure 1 requires the original .lng file for rebuilding.
+- Do not exceed original string lengths in Obscure 1.
+- Always test translations in-game.
+- Backup original files before rebuilding.
