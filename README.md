@@ -53,39 +53,49 @@ Just **drag a file onto the executable or Python script**.
 ### 2️⃣ Command Line Interface (CLI)
 
 #### Obscure 1 — Extract:
+For .csv:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format csv
 ```
+For .txt:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format txt
 ```
+For .both:
 ```
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format both
 ```
 
 #### Obscure 1 — Rebuild:
+For .csv:
 ```bash
 python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 --original LANGUAGE.lng
 ```
+For .txt:
 ```bash
 python obscure_lng_tool.py build LANGUAGE.txt LANGUAGE.new.lng --game ob1 --original LANGUAGE.lng
 ```
 
 #### Obscure 2 — Extract:
+For .csv:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format csv
 ```
+For .txt:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format txt
 ```
+For .both:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format both
 ```
 
 #### Obscure 2 — Rebuild:
+For .csv:
 ```bash
 python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2
 ```
+For .txt:
 ```bash
 python obscure_lng_tool.py build LANGUAGE.txt LANGUAGE.new.lng --game ob2
 ```
@@ -96,29 +106,29 @@ python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob2 --add-
 
 ## How It Works
 Obscure 1
-Scans the .lng file for null-terminated strings
-Preserves:
-Original offsets
-Maximum string length
-File size
-Uses Windows-1252 compatible encoding
-Prevents buffer overflows automatically
+- Scans the .lng file for null-terminated strings
+- Preserves:
+- Original offsets
+- Maximum string length
+- File size
+- Uses Windows-1252 compatible encoding
+- Prevents buffer overflows automatically
 
 ### Obscure 2
 Parses:
-Language code
-Groups
-Entries
-Metadata
-Fully reconstructs the binary structure
-UTF-8 compatible workflow
+- Language code
+- Groups
+- Entries
+- Metadata
+- Fully reconstructs the binary structure
+- UTF-8 compatible workflow
 
-Font & Character Compatibility
-Both games use custom font tables with limited glyph sets.
+- Font & Character Compatibility
+- Both games use custom font tables with limited glyph sets.
 This tool:
-Automatically normalizes unsupported characters
-Replaces invalid glyphs with closest valid alternatives
-Prevents broken text in-game
+- Automatically normalizes unsupported characters
+- Replaces invalid glyphs with closest valid alternatives
+- Prevents broken text in-game
 
 ## Notes & Limitations
 - Obscure 1 requires the original .lng file for rebuilding.
