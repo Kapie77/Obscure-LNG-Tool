@@ -61,7 +61,7 @@ For .txt:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format txt
 ```
-For .both:
+For both:
 ```
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format both
 ```
@@ -85,7 +85,7 @@ For .txt:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format txt
 ```
-For .both:
+For both:
 ```bash
 python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format both
 ```
