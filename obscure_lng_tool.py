@@ -4,6 +4,7 @@ import csv
 import argparse
 import sys
 import os
+import unicodedata
 
 # MAPAS DE SUBSTITUIÇÃO DE CARACTERES (se um caracter não funciona com acento vira uma letra normal, sem acento)
 # OBSCURE 1
@@ -46,43 +47,104 @@ MAP_OB1 = {
 
 # OBSCURE 2
 # Tabela de glifos da fonte do Obscure 2
-# ABCDEFGIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/+-=.,;:!?"'°()[]{}#\@&~^éèêçàâïîùûüôœ¿¡áíóúñÁÉÍÓÒÚÑãõÃÕÜß$ɛ£¥©™ìÈÌÒÙò®
-# acelnoszzACELNOSZZ (todos esses com um ponto em cima, o a e o e tem os pontos embaixo, não sei o que seria isso; o z duplicada tem algo de diferente mas n consigo ver o que é)
+"""
+Olhei as texturas do Obscure 2 e eis as fontes:
+(manda o map consertado)
 
-# font_nonserif12
-# font_mkabel12(01234567889/-)
+font_smallfonts7.tga:
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 1 2 3 4 5 6 7 8 9
+/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+é è ê ç à â ï î ù û ü ô
+œ ¿ ¡ á í ó ú ñ Á É Í Ó Ò Ú Ñ ä ö Ä Ö Ü ß $ €‎ £ ¥
+© ® ™
+
+font_arial14b.tga:
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 1 2 3 4 5 6 7 8 9
+/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+é è ê ç à â ï î ù û
+
+font_nonserif12.dds (a principal):
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 1 2 3 4 5 6 7 8 9
+/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+é è ê ç à â ï î ù û ü ô
+œ ¿ ¡ á í ó ú ñ 
+Á É Í Ó Ò Ú Ñ ä ö Ä Ö Ü ß $ €‎ £ ¥
+© ™ ì È Ì Ù ò < > (seta tipo < só que pra baixo) (seta tipo < que só pra cima) ®
+# acelnoszzACELNOSZZ (todos esses com um ponto em cima, exceto o "a" "A" e o "e" "E" que tem traços embaixo tipo um cedilha, não sei o que seria isso; o z duplicado tem algo de diferente mas não consigo ver o que é)
+
+font_mkabel12.dds:
+0 1 2 3 4 5 6 7 8 9 / -
+
+"""
 
 MAP_OB2 = {
-    # Maiúsculas
-    'A':'A','B':'B','C':'C','D':'D','E':'E','F':'F','G':'G','I':'I','J':'J','K':'K',
-    'L':'L','M':'M','N':'N','O':'O','P':'P','Q':'Q','R':'R','S':'S','T':'T','U':'U',
-    'V':'V','W':'W','X':'X','Y':'Y','Z':'Z',
-    
-    # Minúsculas
-    'a':'a','b':'b','c':'c','d':'d','e':'e','f':'f','g':'g','h':'h','i':'i','j':'j',
-    'k':'k','l':'l','m':'m','n':'n','o':'o','p':'p','q':'q','r':'r','s':'s','t':'t',
-    'u':'u','v':'v','w':'w','x':'x','y':'y','z':'z',
-
-    # Números
-    '0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
-
-    # Pontuação e símbolos
-    '/': '/', '+': '+', '-': '-', '=': '=', '.': '.', ',': ',', ';': ';', ':': ':',
-    '!': '!', '?': '?', '"': '"', "'": "'", '°': '°', '(': '(', ')': ')', '[': '[', 
-    ']': ']', '{': '{', '}': '}', '#': '#', '\\': '\\', '@': '@', '&': '&', '~': '~', 
-    '^': '^',
-
-
-    # Acentos e letras especiais
-    'é':'é','è':'è','ê':'ê','ç':'ç','à':'à','â':'â','ï':'ï','î':'î','ù':'ù','û':'û',
-    'ü':'ü','ô':'ô','œ':'œ','¿':'¿','¡':'¡','á':'á','í':'í','ó':'ó','ú':'ú','ñ':'ñ',
-    'Á':'Á','É':'É','Í':'Í','Ó':'Ó','Ò':'Ò','Ú':'Ú','Ñ':'Ñ','ã':'ã','õ':'õ','Ã':'Ã',
-    'Õ':'Õ','Ü':'Ü','ß':'ß','ɛ':'ɛ','ì':'ì','È':'È','Ì':'Ì','Ò':'Ò','Ù':'Ù','ò':'ò','®':'®',
-
-    # Extras da fonte (glifos misteriosos acelnoszz + ACELNOSZZ)
+    # Glifos especiais da fonte (letras com ponto / traço estranho)
     'ȧ':'a','ċ':'c','ė':'e','l̇':'l','ṅ':'n','ȯ':'o','ṡ':'s','ż':'z',
     'Ȧ':'A','Ċ':'C','Ė':'E','L̇':'L','Ṅ':'N','Ȯ':'O','Ṡ':'S','Ż':'Z',
 }
+
+OB2_SUPPORTED = set(
+    # Letras maiúsculas
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    # Letras minúsculas
+    "abcdefghijklmnopqrstuvwxyz"
+
+    # Números
+    "0123456789"
+
+    # Espaço
+    " "
+
+    # Pontuação e símbolos
+    "/+-=.,;:!?\"'°()[]{}#\\@&~^"
+
+    # Minúsculas acentuadas SUPORTADAS
+    "éèêçàâïîùûüôœ¿¡áíóúñ"
+
+    # Maiúsculas acentuadas SUPORTADAS
+    "ÁÉÍÓÒÚÑÄÖÜß"
+
+    # Outros símbolos presentes
+    "$€£¥©®™ìÈÌÙò"
+
+    # Setas especiais da font_nonserif12
+    "<>"  # (as setas pra cima/baixo usam esses slots)
+)
+
+
+def normalize_for_ob2(text):
+    out = []
+
+    for c in text:
+        # Se o jogo suporta, mantém
+        if c in OB2_SUPPORTED:
+            out.append(c)
+            continue
+
+        # Decompõe (NFD): õ → o + ~
+        decomposed = unicodedata.normalize('NFD', c)
+
+        # Remove diacríticos (combining marks)
+        base = ''.join(
+            ch for ch in decomposed
+            if unicodedata.category(ch) != 'Mn'
+        )
+
+        # Se sobrou algo válido, usa
+        if base and base[0] in OB2_SUPPORTED:
+            out.append(base[0])
+        else:
+            # fallback final
+            out.append('?')
+
+    return ''.join(out)
 
 
 # DETECTA QUAL O JOGO
@@ -332,7 +394,7 @@ def build_ob2(csv_path, output_lng, encoding='utf-8', add_null=False):
             for e in range(entryCount):
                 if e in entries:
                     meta, text = entries[e]
-                    text = map_text(text, 'ob2')  # aplica o mapa
+                    text = normalize_for_ob2(map_text(text, 'ob2'))  # aplica o mapa
                     btext = text.encode(encoding, errors='replace')  # codifica para bytes
                     if add_null and (not btext or btext[-1] != 0):
                         btext += b'\x00'
