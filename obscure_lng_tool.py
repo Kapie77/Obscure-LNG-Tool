@@ -1,14 +1,4 @@
 #!/usr/bin/env python3
-"""
-Unified CLI tool for Obscure 1 and Obscure 2 .lng files
-Supports extraction to CSV/TXT and rebuilding to .lng
-
-Examples:
-  python obscure_lng_tool.py extract game.lng my_dump --game ob1 --format csv
-  python obscure_lng_tool.py extract game.lng my_dump --game ob2 --format both
-  python obscure_lng_tool.py build my_dump.csv new.lng --game ob2 --add-null
-"""
-
 import struct
 import csv
 import argparse
@@ -16,7 +6,7 @@ import sys
 import os
 
 # MAPAS DE SUBSTITUIÇÃO DE CARACTERES (se um caracter não funciona com acento vira uma letra normal, sem acento)
-# Obscure 1
+# OBSCURE 1
 # Tabela de glifos da fonte do Obscure 1
 # ABCDEFGIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/+-=.,;:!?"'*()[]||#\@&~^éèêçàâïîùûüôɛ¿¡áíóúñÁÉÍÓÚÑãõÃÕÜß$œ£¥©®™ìÈÌÒÙò
 
@@ -54,7 +44,7 @@ MAP_OB1 = {
     'ì': 'ì', 'È': 'È', 'Ì': 'Ì', 'Ò': 'Ò', 'Ù': 'Ù', 'ò': 'ò'
 }
 
-# Obscure 2
+# OBSCURE 2
 # Tabela de glifos da fonte do Obscure 2
 # ABCDEFGIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/+-=.,;:!?"'°()[]{}#\@&~^éèêçàâïîùûüôœ¿¡áíóúñÁÉÍÓÒÚÑãõÃÕÜß$ɛ£¥©™ìÈÌÒÙò®
 # acelnoszzACELNOSZZ (todos esses com um ponto em cima, o a e o e tem os pontos embaixo, não sei o que seria isso; o z duplicada tem algo de diferente mas n consigo ver o que é)
@@ -525,3 +515,4 @@ if __name__ == '__main__':
         # Passou argumentos → CLI normal
 
         main()
+
