@@ -5,45 +5,148 @@ import argparse
 import sys
 import os
 import unicodedata
+import re
 
 # MAPAS DE SUBSTITUIÇÃO DE CARACTERES (se um caracter não funciona com acento vira uma letra normal, sem acento)
 # OBSCURE 1
 # Tabela de glifos da fonte do Obscure 1
-# ABCDEFGIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/+-=.,;:!?"'*()[]||#\@&~^éèêçàâïîùûüôɛ¿¡áíóúñÁÉÍÓÚÑãõÃÕÜß$œ£¥©®™ìÈÌÒÙò
+"""
+font_holstein16 (principal)
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 1 2 3 4 5 6 7 8 9
+/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+é è ê ç à â ï î ù û ü ô
+œ ¿ ¡ á í ó ú ñ Á É Í Ó Ú Ñ ä ö Ä Ö Ü ß $ €‎ £ ¥
+© ® ™
+ì È Ì Ò Ù
 
-# font_holstein16
-# font_lucida10(01234567889/)
+font_lucida10
+0 1 2 3 4 5 6 7 8 9 /
+
+font_holstein18
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 1 2 3 4 5 6 7 8 9
+é è ê ç à â ï î ù û ü ô
+, ' : ! ? . ( ) [ ] / @ + (quadrado) = " $ (quadrado)
+
+font_holstein24
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+0 1 2 3 4 5 6 7 8 9
+/ + - = . , ; : ! ? " ' ° ( ) [ ] # \ ¿ ¡
+Á É Í Ó Ú Ñ Ä Ö Ü ß
+© ® ™
+
+font_holstein30
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+/ - . , ; : ! ? " ' ° ( ) [ ] # \ ¿ ¡
+Á É Í Ó Ú Ñ Ä Ö Ü ß
+"""
 
 MAP_OB1 = {
-    # Maiúsculas acentuadas
-    'Á': 'Á', 'À': 'A', 'Ã': 'A', 'Â': 'A',
-    'É': 'É', 'Ê': 'E',
-    'Í': 'Í',
-    'Ó': 'Ó', 'Ô': 'O', 'Õ': 'O',
-    'Ú': 'U',
-    'Ç': 'C',
-    'Ñ': 'N',
-    'Œ': 'Œ',      # ligadura francesa
-    'Ɇ': 'Ɇ',      # E com barra/traço do meio
+   # Glifos especiais da fonte (letras com ponto / traço estranho)
+    'ȧ':'a','ċ':'c','ė':'e','l̇':'l','ṅ':'n','ȯ':'o','ṡ':'s','ż':'z',
+    'Ȧ':'A','Ċ':'C','Ė':'E','L̇':'L','Ṅ':'N','Ȯ':'O','Ṡ':'S','Ż':'Z',
 
-    # Minúsculas acentuadas
-    'á': 'á', 'à': 'à', 'â': 'â',
-    'ã': 'a', 'é': 'é', 'ê': 'e',
-    'í': 'í', 'ó': 'ó', 'ô': 'o', 'õ': 'o',
-    'ú': 'u', 'ç': 'c', 'ñ': 'n',
-    'œ': 'œ',      # ligadura francesa
-
-    # Trema e diacríticos
-    'Ä': 'Ä', 'Ë': 'E', 'Ï': 'I', 'Ö': 'Ö', 'Ü': 'Ü',
-    'ä': 'ä', 'ë': 'e', 'ï': 'i', 'ö': 'o', 'ü': 'u',
-
-    # Símbolos especiais da fonte
-    '/': '/', '+': '+', '-': '-', '=': '=', '.': '.', ',': ',', ';': ';', ':': ':',
-    '!': '!', '?': '?', '"': '"', "'": "'", '*': '*', '(': '(', ')': ')', '[': '[', ']': ']',
-    '|': '|', '#': '#', '\\': '\\', '@': '@', '&': '&', '~': '~', '^': '^',
-    '¿': '¿', '¡': '¡', '$': '$', '£': '£', '¥': '¥', '©': '©', '®': '®', '™': '™',
-    'ì': 'ì', 'È': 'È', 'Ì': 'Ì', 'Ò': 'Ò', 'Ù': 'Ù', 'ò': 'ò'
+    'Æ':'A', 'æ':'a',
+    'Œ':'O', 'œ':'o',
+    'ò':'o', 'Ò':'O',
+    'õ':'o', 'Õ':'O',
 }
+
+OB1_SUPPORTED = set(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"      # Maiúsculas
+    "abcdefghijklmnopqrstuvwxyz"      # Minúsculas
+    "0123456789"                      # Números
+    " "                               # Espaço
+    "/+-=.,;:!?\"'°()[]{}#\\@&~^"     # Símbolos da fonte
+    "éèêçàâïîùûüô"                    # Minúsculas acentuadas
+    "áíóúñÁÉÍÓÚÑÄÖÜß"                 # Maiúsculas acentuadas
+    "$€£¥©®™"                         # Outros símbolos especiais
+)
+
+def normalize_for_ob1(text):
+    out = []
+
+    for c in text:
+        # Suportado direto
+        if c in OB1_SUPPORTED:
+            out.append(c)
+            continue
+
+        # Mapa manual
+        if c in MAP_OB1:
+            out.append(MAP_OB1[c])
+            continue
+
+        # Decomposição Unicode (Õ → O + ~)
+        decomposed = unicodedata.normalize('NFD', c)
+        base = ''.join(
+            ch for ch in decomposed
+            if unicodedata.category(ch) != 'Mn'
+        )
+
+        # Se a letra base existir na fonte, usa
+        if base and base[0] in OB1_SUPPORTED:
+            out.append(base[0])
+        else:
+            # último fallback REALISTA
+            out.append('')
+
+    return ''.join(out)
+
+# Ignora bytes que não são glifos
+def clean_ob1_text(raw_bytes):
+    """
+    Remove tokens de controle do Obscure 1.
+    Mantém SOMENTE bytes que mapeiam para glifos reais da fonte.
+    """
+    clean = bytearray()
+
+    for b in raw_bytes:
+        # ASCII imprimível básico (espaço até ~)
+        if 0x20 <= b <= 0x7E:
+            clean.append(b)
+            continue
+
+        # Acentos CP1252 usados pela fonte Holstein
+        if b in (
+            0xE9, 0xE8, 0xEA, 0xE7, 0xE0, 0xE2,
+            0xEF, 0xEE, 0xF9, 0xFB, 0xFC, 0xF4,
+            0xE1, 0xED, 0xF3, 0xFA, 0xF1,
+            0xC1, 0xC9, 0xCD, 0xD3, 0xDA, 0xD1,
+            0x99,  # ™
+            0xA9,  # ©
+            0xAE,  # ®
+        ):
+            clean.append(b)
+            continue
+
+        # Qualquer outro byte é TOKEN → IGNORA
+        continue
+
+    return bytes(clean)
+
+# limpza final do texto do ob1
+def extract_ob1_label(text):
+    """
+    Extrai apenas o LABEL do Obscure 1 (menus).
+    Remove textos de ajuda, input hints, etc.
+    """
+
+    # caso simples: tudo ALL CAPS (ok)
+    if re.fullmatch(r'[A-Z0-9 ]+', text):
+        return text
+
+    # corta quando começa texto explicativo
+    m = re.match(r'^([A-Z0-9 ]+)', text)
+    if m:
+        return m.group(1)
+
+    return text
+
+
 
 # OBSCURE 2
 # Tabela de glifos da fonte do Obscure 2
@@ -52,7 +155,7 @@ font_smallfonts7.tga:
 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 a b c d e f g h i j k l m n o p q r s t u v w x y z
 0 1 2 3 4 5 6 7 8 9
-/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+'/ + - = . , ; : ! ? " \' ° ( ) [ ] { } # \\ @ & ~ ^'
 é è ê ç à â ï î ù û ü ô
 œ ¿ ¡ á í ó ú ñ Á É Í Ó Ò Ú Ñ ä ö Ä Ö Ü ß $ €‎ £ ¥
 © ® ™
@@ -61,18 +164,18 @@ font_arial14b.tga:
 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 a b c d e f g h i j k l m n o p q r s t u v w x y z
 0 1 2 3 4 5 6 7 8 9
-/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+'/ + - = . , ; : ! ? " \' ° ( ) [ ] { } # \\ @ & ~ ^'
 é è ê ç à â ï î ù û
 
 font_nonserif12.dds (a principal):
 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 a b c d e f g h i j k l m n o p q r s t u v w x y z
 0 1 2 3 4 5 6 7 8 9
-/ + - = . , ; : ! ? " ' ° ( ) [ ] { } # \ @ & ~ ^
+'/ + - = . , ; : ! ? " \' ° ( ) [ ] { } # \\ @ & ~ ^'
 é è ê ç à â ï î ù û ü ô
 œ ¿ ¡ á í ó ú ñ 
 Á É Í Ó Ò Ú Ñ ä ö Ä Ö Ü ß $ €‎ £ ¥
-© ™ ì È Ì Ù ò < > (seta tipo < só que pra baixo) (seta tipo < que só pra cima) ®
+© ™ ì È Ì Ù ò < > V Λ ®
 # acelnoszzACELNOSZZ (todos esses com um ponto em cima, exceto o "a" "A" e o "e" "E" que tem traços embaixo tipo um cedilha, não sei o que seria isso; o z duplicado tem algo de diferente mas não consigo ver o que é)
 
 font_mkabel12.dds:
@@ -146,116 +249,168 @@ def normalize_for_ob2(text):
 
 # DETECTA QUAL O JOGO
 def detect_game_type(lng_path):
-    """Attempt to detect whether the file is from Obscure 1 or Obscure 2 based on first bytes"""
     try:
         with open(lng_path, 'rb') as f:
-            magic = f.read(32)
-    except Exception as e:
-        print(f"Error reading file: {e}")
-        sys.exit(1)
+            head = f.read(16)
 
-    if len(magic) < 16:
-        return 'unknown'
+        if len(head) < 8:
+            return 'unknown'
 
-    # Obscure 2: starts with languageCode + groupCount
-    try:
-        lang, groups = struct.unpack_from('<II', magic)
-        # Relaxed check: languageCode pode ser maior (ex: 3844), groups razoável
-        if groups >= 1 and groups <= 5000:  # limite alto para groupCount
-            if len(magic) >= 16:
-                group_id, entry_count = struct.unpack_from('<II', magic, 8)
-                if 0 <= entry_count <= 20000:  # limite generoso para entryCount
-                    return 'ob2'
-    except:
-        pass
+        a, b = struct.unpack('>II', head[:8])
 
-    # Obscure 1: many leading zeros + no large groupCount early
-    if magic[:4] == b'\x00\x00\x00\x00':
-        # Avoid false positive if Obscure 2 has lang=0
-        try:
-            _, groups = struct.unpack_from('<II', magic)
-            if groups > 5000 or groups == 0:
-                return 'ob1'
-        except:
-            pass
-        # Or readable text early after header
-        if any(32 <= b <= 126 for b in magic[20:32]):
+        # Obscure 1: entryCount grande, grupos pequenos depois
+        if a == 0 and 1 <= b <= 100000:
             return 'ob1'
+
+        # Obscure 2: languageCode != 0, poucos grupos
+        if a != 0 and 1 <= b <= 10000:
+            return 'ob2'
+
+    except Exception:
+        pass
 
     return 'unknown'
 
+# Ler byte-a-byte até encontrar um terminador real Obscure 1
+def read_ob1_string(f, max_len=4096):
+    buf = bytearray()
+    read_bytes = 0
+
+    while read_bytes < max_len:
+        b = f.read(1)
+        if not b:
+            break
+
+        b = b[0]
+        read_bytes += 1
+
+        # terminadores fortes
+        if b == 0x00:
+            break
+
+        # quebra de linha inesperada em label
+        if b in (0x0A, 0x0D):
+            break
+
+        buf.append(b)
+
+    return bytes(buf), read_bytes
+
 
 # EXTRAÇÃO DO OBSCURE 1
-def extract_ob1(lng_path, prefix, encoding='latin-1', skip=28):
+def extract_ob1(lng_path, prefix, encoding='cp1252'):
+    rows = []
+
     with open(lng_path, 'rb') as f:
-        data = f.read()
+        # 🔎 Procura header válido (0, entryCount)
+        header_pos = None
+        entryCount = None
 
-    content = data[skip:]
+        f.seek(0, 2)
+        file_size = f.tell()  # tamanho total do arquivo
 
-    entries = []
-    pos = 0
-    idx = 0
+        for offset in range(0, file_size - 8, 4):  # percorre TODO o arquivo
+            f.seek(offset)
+            buf = f.read(8)
+            if len(buf) < 8:
+                continue
+            a, b = struct.unpack('>II', buf)
+            if a == 0 and 1 <= b <= 100000:
+                header_pos = offset
+                entryCount = b
 
-    MAX_STRINGS = 50000
-    MAX_STRING_LEN = 8192
-    NULL_RUN_LIMIT = 16
-    null_run = 0
+                meta = {
+                    'header_pos': header_pos,
+                    'entryCount': entryCount
+                }
 
-    while pos < len(content):
-        if content[pos] == 0x00:
-            null_run += 1
-            if null_run >= NULL_RUN_LIMIT:
+                import json
+
+                with open(prefix + '.meta.json', 'w', encoding='utf-8') as mf:
+                    json.dump(meta, mf, indent=2)
+
+
                 break
-            pos += 1
-            continue
-        else:
-            null_run = 0
 
-        end = content.find(b'\x00', pos)
-        if end == -1:
-            break
+        if header_pos is None:
+            print("❌ Não foi possível localizar header válido do Obscure 1.")
+            return
 
-        size = end - pos
-        if size > MAX_STRING_LEN:
-            break
 
-        raw = content[pos:end]
+        # Vai para o começo real das entries
+        f.seek(header_pos + 8)
 
-        # conta zeros após a string
-        null_count = 0
-        p = end
-        while p < len(content) and content[p] == 0x00:
-            null_count += 1
-            p += 1
+        for i in range(entryCount):
+            header = f.read(4)
+            if len(header) < 4:
+                print(f"⚠️ EOF inesperado ao ler entry {i}")
+                break
 
-        text = raw.decode(encoding, errors='replace')
+            group, eid = struct.unpack('>HH', header)
 
-        entries.append({
-            'index': idx,
-            'offset': skip + pos,
-            'max_len': size,
-            'null_count': null_count,
-            'original': text,
-            'translated': ''
-        })
+            buf = f.read(4)
+            if len(buf) < 4:
+                print(f"⚠️ EOF inesperado ao ler textLen da entry {i}")
+                break
 
-        idx += 1
-        pos = end + null_count
+            textLen = struct.unpack('>I', buf)[0]
 
-        if idx >= MAX_STRINGS:
-            break
+            # SANITY CHECK
+            if textLen <= 0 or textLen > 4096:
+                print(f"⚠️ textLen inválido ({textLen}) na entry {i}, abortando extração OB1.")
+                continue
+
+            enc = struct.unpack('B', f.read(1))[0]  # 1 byte não depende de endian
+
+            data_len = textLen - 1
+            param = None
+
+            if enc == 1:
+                p = f.read(1)
+                if len(p) < 1:
+                    print(f"⚠️ EOF inesperado ao ler param da entry {i}")
+                    break
+                param = struct.unpack('B', p)[0]
+                data_len -= 1
+
+            data, consumed = read_ob1_string(f, textLen)
+            clean = clean_ob1_text(data)
+
+            # pula o resto do bloco, se sobrar
+            remaining = data_len - consumed
+            if remaining > 0:
+                f.seek(remaining, 1)
+
+
+            try:
+                text = clean.decode(encoding, errors='replace')
+                text = extract_ob1_label(text)
+            except Exception:
+                text = ''
+
+
+            rows.append({
+                'index': i,
+                'group': group,
+                'id': eid,
+                'encoding': enc,
+                'param': param if param is not None else '',
+                'textLen': textLen,
+                'original': text,
+                'translated': ''
+            })
 
     csv_file = prefix + '.csv'
     with open(csv_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=['index', 'offset', 'max_len', 'null_count', 'original', 'translated']
+            fieldnames=['index', 'group', 'id', 'encoding', 'param', 'textLen', 'original', 'translated']
         )
         writer.writeheader()
-        writer.writerows(entries)
+        writer.writerows(rows)
 
-    print(f"✔ Obscure 1 - Extracted {len(entries)} strings")
-    print(f"  Arquivo gerado: {csv_file}")
+    print(f"✔ Obscure 1 - Extracted {len(rows)} entries")
+
 
 
 # EXTRAÇÃO DO OBSCURE 2
@@ -313,40 +468,100 @@ def extract_ob2(lng_path, prefix, format_type='both', encoding='utf-8'):
     print("Generated:", ", ".join(generated))
     return rows
 
+# validação de placehodlers do obscure 1
+import re
+
+def extract_placeholders(text):
+    return re.findall(r'%[sdif]', text)
+
 # REPACK DO OBSCURE 1
-def build_ob1(csv_path, original_lng, output_lng, encoding='latin-1'):
-    with open(original_lng, 'rb') as f:
-        data = bytearray(f.read())
+def build_ob1(csv_path, output_lng, encoding='cp1252'):
+    import json
+
+    meta_path = os.path.splitext(csv_path)[0] + '.meta.json'
+    if not os.path.exists(meta_path):
+        raise RuntimeError("Arquivo .meta.json não encontrado")
+
+    with open(meta_path, 'r', encoding='utf-8') as mf:
+        meta = json.load(mf)
+
+    entryCount = meta['entryCount']
+    header_pos = meta.get('header_pos', 0)
 
     with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
-        for row in reader:
-            offset = int(row['offset'])
-            max_len = int(row['max_len'])
-            null_count = int(row['null_count'])
+        rows = list(reader)
+    
+    # valida ordem e quantidade
+    rows.sort(key=lambda r: int(r['index']))
 
-            translated = row['translated'].strip()
-            if not translated:
-                continue  # NÃO TOCA NA STRING ORIGINAL
-
-            # aplica o mapa
-            translated = map_text(translated, 'ob1')
-
-            encoded = translated.encode('cp1252', errors='replace') # IMPORTANTE: Obscure 1 usa encoding compatível com latin-1 / cp1252
-
-            if len(encoded) > max_len:
-                encoded = encoded[:max_len]
-
-            data[offset:offset + len(encoded)] = encoded
-            data[offset + len(encoded):offset + len(encoded) + null_count] = b'\x00' * null_count
-
-
+    if len(rows) != entryCount:
+        raise ValueError(
+            f"CSV tem {len(rows)} entries, mas o header espera {entryCount}"
+        )
+    
+    for expected, row in enumerate(rows):
+        if int(row['index']) != expected:
+            raise ValueError(
+                f"Índice fora de ordem ou faltando: esperado {expected}, achou {row['index']}"
+            )
 
     with open(output_lng, 'wb') as f:
-        f.write(data)
+        # padding até o header original
+        if header_pos > 0:
+            f.write(b'\x00' * header_pos)
+
+        # HEADER ORIGINAL NO OFFSET CORRETO
+        f.write(struct.pack('>II', 0, entryCount))
+
+        for row in rows:
+            group = int(row['group'])
+            eid   = int(row['id'])
+            enc   = int(row['encoding'])
+            param = int(row['param']) if row['param'] else None
+
+            text = row['translated'] or row['original']
+
+            # NORMALIZAÇÃO
+            text = normalize_for_ob1(text)  # Aplica mapa + validação de caracteres suportados
+
+            # VALIDAÇÃO DE PLACEHOLDERS (APENAS encoding == 1)
+            if enc == 1:
+                orig_ph = extract_placeholders(row['original'])
+                new_ph  = extract_placeholders(text)
+
+                if orig_ph != new_ph:
+                    raise ValueError(
+                        f"Placeholders incompatíveis na entry {row['index']}: "
+                        f"{orig_ph} != {new_ph}"
+                    )
+
+            data = text.encode('cp1252', errors='replace')
+
+            orig_textLen = int(row['textLen'])
+
+            # converte para bytes
+            text_bytes = text.encode('cp1252', errors='replace')
+
+            # calcula textLen corretamente
+            if enc == 0:
+                textLen = 1 + len(text_bytes)      # 1 byte encoding + texto
+            elif enc == 1:
+                textLen = 1 + 1 + len(text_bytes)  # 1 byte encoding + 1 byte param + texto
+
+
+            # ESCREVE ENTRY
+            f.write(struct.pack('>HHI', group, eid, textLen))
+            f.write(struct.pack('B', enc))
+
+            if enc == 1:
+                f.write(struct.pack('B', param))
+            
+            # escreve os bytes do texto
+            f.write(text_bytes)
+
 
     print(f"✔ Obscure 1 rebuilt → {output_lng}")
-    print("  (tamanho do arquivo preservado)")
 
 
 # REPACK DO OBSCURE 2
@@ -406,7 +621,7 @@ def build_ob2(csv_path, output_lng, encoding='utf-8', add_null=False):
                     f.write(btext)
 
     print(f"✔ Obscure 2 rebuilt → {output_lng}")
-    print(f"  Grups: {groupCount}")
+    print(f"  Groups: {groupCount}")
 
 
 # FUNÇÃO DE NORMALIZAÇÃO COM MAPA
@@ -434,7 +649,7 @@ def main():
                     "  python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob1 --format csv --encoding latin-1\n"
                     "\n"
                     "Obscure 1 (Repack/Build):\n"
-                    "  python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 --original LANGUAGE.lng\n"
+                    "  python obscure_lng_tool.py build LANGUAGE.csv LANGUAGE.new.lng --game ob1 LANGUAGE.lng\n"
                     "\n"
                     "Obscure 2 (Extract):\n"
                     "  python obscure_lng_tool.py extract LANGUAGE.lng LANGUAGE --game ob2 --format csv\n"
@@ -460,7 +675,6 @@ def main():
     ex.add_argument('--game', choices=['ob1', 'ob2'], required=True, help='Game type: ob1 or ob2')
     ex.add_argument('--format', '-f', choices=['csv', 'txt', 'both'], default='both',
                     help='Output format (default: both)')
-    ex.add_argument('--skip', type=int, default=28, help='Bytes to skip (header) - only for ob1')
     ex.add_argument('--encoding', default=None, help='Text encoding (latin-1 for ob1, utf-8 for ob2)')
 
     # --- Build ---
@@ -472,13 +686,12 @@ def main():
     bu.add_argument('csv', help='Edited CSV file')
     bu.add_argument('output', help='Output .lng file')
     bu.add_argument('--game', choices=['ob1', 'ob2'], required=True, help='Game type: ob1 or ob2')
-    bu.add_argument('--original', help='Original .lng file (required for ob1 to preserve header)')
     bu.add_argument('--add-null', action='store_true', help='Add \\x00 null terminator to strings')
     bu.add_argument('--encoding', default=None, help='Text encoding (latin-1 for ob1, utf-8 for ob2)')
 
     args = parser.parse_args()
 
-    enc = args.encoding or ('latin-1' if args.game == 'ob1' else 'utf-8')
+    enc = args.encoding or ('cp1252' if args.game == 'ob1' else 'utf-8')
 
     if args.cmd == 'extract':
         detected = detect_game_type(args.input)
@@ -495,16 +708,14 @@ def main():
             sys.exit(1)
 
         if args.game == 'ob1':
-            extract_ob1(args.input, args.prefix, enc, args.skip)
+            extract_ob1(args.input, args.prefix, enc)
         else:
             extract_ob2(args.input, args.prefix, args.format, enc)
 
     elif args.cmd == 'build':
-        if args.game == 'ob1' and not args.original:
-            parser.error("--original is required for Obscure 1 (to preserve header)")
 
         if args.game == 'ob1':
-            build_ob1(args.csv, args.original, args.output, enc)
+            build_ob1(args.csv, args.output, enc)
         else:
             build_ob2(args.csv, args.output, enc, args.add_null)
 
@@ -526,12 +737,13 @@ def main_drag_drop():
             # Detecta o jogo
             game = detect_game_type(path)
             if game == 'unknown':
-                print(f"{path}: Não foi possível detectar o tipo de jogo. Usando ob1 como padrão.")
-                game = 'ob1'
+                print(f"❌ {path}: Não foi possível detectar o tipo do .lng.")
+                print("    Use a linha de comando e especifique --game ob1 ou ob2.")
+                continue
 
             prefix = os.path.splitext(path)[0]
             if game == 'ob1':
-                extract_ob1(path, prefix, encoding='latin-1', skip=28)
+                extract_ob1(path, prefix, encoding='cp1252')
             else:
                 extract_ob2(path, prefix, format_type='csv', encoding='utf-8')
 
@@ -549,10 +761,7 @@ def main_drag_drop():
                 game = 'ob1'
 
             if game == 'ob1':
-                if not os.path.exists(original_lng):
-                    print(f"❌ Obscure 1 precisa do .lng original para rebuild.")
-                    continue
-                build_ob1(path, original_lng, output_lng)
+                build_ob1(path, output_lng, encoding='cp1252')
             elif game == 'ob2':
                 build_ob2(path, output_lng, encoding='utf-8')
             else:
@@ -561,6 +770,10 @@ def main_drag_drop():
 
         else:
             print(f"Formato não suportado: {path}")
+
+            if os.name == 'nt':
+                input("\nPressione ENTER para sair...")
+
 
 # Detecta se o programa foi aberto via arrastar e soltar ou via linha de código
 if __name__ == '__main__':
@@ -574,5 +787,3 @@ if __name__ == '__main__':
         # Passou argumentos → CLI normal
 
         main()
-
-
