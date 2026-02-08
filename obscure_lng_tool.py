@@ -333,7 +333,7 @@ def extract_ob1(lng_path, prefix, encoding='cp1252'):
                 break
 
         if header_pos is None:
-            print("❌ Não foi possível localizar header válido do Obscure 1.")
+            print("❌ Could not find valid Obscure 1 header.")
             return
 
 
@@ -343,21 +343,21 @@ def extract_ob1(lng_path, prefix, encoding='cp1252'):
         for i in range(entryCount):
             header = f.read(4)
             if len(header) < 4:
-                print(f"⚠️ EOF inesperado ao ler entry {i}")
+                print(f"⚠️ Unexpected EOF while reading entry {i}")
                 break
 
             group, eid = struct.unpack('>HH', header)
 
             buf = f.read(4)
             if len(buf) < 4:
-                print(f"⚠️ EOF inesperado ao ler textLen da entry {i}")
+                print(f"⚠️ Unexpected EOF when reading textLen from entry {i}")
                 break
 
             textLen = struct.unpack('>I', buf)[0]
 
             # SANITY CHECK
             if textLen <= 0 or textLen > 4096:
-                print(f"⚠️ textLen inválido ({textLen}) na entry {i}, abortando extração OB1.")
+                print(f"⚠️ Invalid textLen ({textLen}) in entry {i}, aborting extraction OB1.")
                 continue
 
             enc = struct.unpack('B', f.read(1))[0]  # 1 byte não depende de endian
@@ -368,7 +368,7 @@ def extract_ob1(lng_path, prefix, encoding='cp1252'):
             if enc == 1:
                 p = f.read(1)
                 if len(p) < 1:
-                    print(f"⚠️ EOF inesperado ao ler param da entry {i}")
+                    print(f"⚠️ Unexpected EOF when reading entry param {i}")
                     break
                 param = struct.unpack('B', p)[0]
                 data_len -= 1
@@ -469,8 +469,6 @@ def extract_ob2(lng_path, prefix, format_type='both', encoding='utf-8'):
     return rows
 
 # validação de placehodlers do obscure 1
-import re
-
 def extract_placeholders(text):
     return re.findall(r'%[sdif]', text)
 
@@ -480,7 +478,7 @@ def build_ob1(csv_path, output_lng, encoding='cp1252'):
 
     meta_path = os.path.splitext(csv_path)[0] + '.meta.json'
     if not os.path.exists(meta_path):
-        raise RuntimeError("Arquivo .meta.json não encontrado")
+        raise RuntimeError(".meta.json file not found")
 
     with open(meta_path, 'r', encoding='utf-8') as mf:
         meta = json.load(mf)
@@ -497,13 +495,13 @@ def build_ob1(csv_path, output_lng, encoding='cp1252'):
 
     if len(rows) != entryCount:
         raise ValueError(
-            f"CSV tem {len(rows)} entries, mas o header espera {entryCount}"
+            f"CSV has {len(rows)} entries, but the header expects {entryCount}"
         )
     
     for expected, row in enumerate(rows):
         if int(row['index']) != expected:
             raise ValueError(
-                f"Índice fora de ordem ou faltando: esperado {expected}, achou {row['index']}"
+                f"Index out of order or missing: expected {expected}, found {row[‘index’]}"
             )
 
     with open(output_lng, 'wb') as f:
@@ -532,7 +530,7 @@ def build_ob1(csv_path, output_lng, encoding='cp1252'):
 
                 if orig_ph != new_ph:
                     raise ValueError(
-                        f"Placeholders incompatíveis na entry {row['index']}: "
+                        f"Incompatible placeholders in entry {row[‘index’]}: "
                         f"{orig_ph} != {new_ph}"
                     )
 
@@ -737,8 +735,8 @@ def main_drag_drop():
             # Detecta o jogo
             game = detect_game_type(path)
             if game == 'unknown':
-                print(f"❌ {path}: Não foi possível detectar o tipo do .lng.")
-                print("    Use a linha de comando e especifique --game ob1 ou ob2.")
+                print(f"❌ {path}: The type of .lng could not be detected.")
+                print("    Use the command line and specify --game ob1 or ob2.")
                 continue
 
             prefix = os.path.splitext(path)[0]
@@ -755,9 +753,9 @@ def main_drag_drop():
             if os.path.exists(original_lng):
                 game = detect_game_type(original_lng)
             else:
-                print(f"⚠️ Arquivo .lng original não encontrado para detectar o jogo:")
+                print(f"⚠️ Original .lng file not found to detect the game:")
                 print(f"   Esperado: {original_lng}")
-                print("   Usando Obscure 1 como padrão.")
+                print("   Using Obscure 1 as the default.")
                 game = 'ob1'
 
             if game == 'ob1':
@@ -765,14 +763,14 @@ def main_drag_drop():
             elif game == 'ob2':
                 build_ob2(path, output_lng, encoding='utf-8')
             else:
-                print(f"❌ Não foi possível detectar o tipo do jogo para: {path}")
+                print(f"❌ Unable to detect the game type for: {path}")
 
 
         else:
-            print(f"Formato não suportado: {path}")
+            print(f"Unsupported format: {path}")
 
             if os.name == 'nt':
-                input("\nPressione ENTER para sair...")
+                input("\nPress ENTER to exit...")
 
 
 # Detecta se o programa foi aberto via arrastar e soltar ou via linha de código
