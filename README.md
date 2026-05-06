@@ -7,8 +7,8 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 
 ## 📦 Supported Games
 
-| Game | Status |
-|-----|------|
+| Game | Status |  |
+|-----|------|------|
 | Final Exam | Steam ✅ | Xbox ✅
 
 # Como usar
