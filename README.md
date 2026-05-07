@@ -9,6 +9,7 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 
 | Game | Status |  |
 |-----|------|------|
+| Obscure 1 | Steam ✅ |
 | Final Exam | Steam ✅ | Xbox ✅
 
 # Como usar
