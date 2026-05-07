@@ -1,3 +1,4 @@
+import sys
 import argparse
 from core.detect import detect_game
 from games.final_exam import extract_final_exam, rebuild_final_exam
@@ -10,29 +11,72 @@ from core.csv import export_csv, parse_csv
 #          CLI
 # ======================
 def main():
+    import sys
+    import argparse
+
     parser = argparse.ArgumentParser(
         prog="lngtool",
-        description="Final Exam / Obscure .lng tool"
+        description="Obscure 1, Obscure 2 and Final Exam .lng tool"
     )
 
-    sub = parser.add_subparsers(dest="command", required=True)
+    sub = parser.add_subparsers(dest="command")
 
-    # detect
     detect_cmd = sub.add_parser("detect")
     detect_cmd.add_argument("input")
 
-    # extract
     extract_cmd = sub.add_parser("extract")
     extract_cmd.add_argument("input")
     extract_cmd.add_argument("-o", "--output")
     extract_cmd.add_argument("--format", choices=["txt", "csv", "both"], default="txt")
 
-    # rebuild
     rebuild_cmd = sub.add_parser("rebuild")
     rebuild_cmd.add_argument("input")
     rebuild_cmd.add_argument("-o", "--output")
 
-    args = parser.parse_args()
+    # ======================
+    # DRAG & DROP FIRST CHECK (ANTES DO ARGPARSE)
+    # ======================
+    if len(sys.argv) == 2 and not sys.argv[1].startswith("-"):
+        file_path = sys.argv[1].strip('"')
+
+        if file_path.endswith(".lng"):
+            print("\nChoose output format:")
+            print("[1] TXT")
+            print("[2] CSV")
+            print("[3] BOTH")
+
+            print("Or type: txt / csv / both\n")
+
+            choice = input("Option: ").strip().lower()
+
+            if choice in ["1", "txt"]:
+                fmt = "txt"
+            elif choice in ["2", "csv"]:
+                fmt = "csv"
+            elif choice in ["3", "both"]:
+                fmt = "both"
+            else:
+                print("[ERRO] invalid option")
+                return
+
+            args = argparse.Namespace(
+                command="extract",
+                input=file_path,
+                output=None,
+                format=fmt
+            )
+
+        elif file_path.endswith((".txt", ".csv")):
+            args = argparse.Namespace(
+                command="rebuild",
+                input=file_path,
+                output=None
+            )
+        else:
+            print("[ERRO] unknown file:", file_path)
+            return
+    else:
+        args = parser.parse_args()
 
     # ======================
     # DETECT
