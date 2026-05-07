@@ -91,7 +91,9 @@ def extract_ob1(path):
         pos += body_len
 
         if enc == 0:
-            text = raw.split(b"\x00")[0].decode("cp1252", errors="ignore")
+            text = apply_ob1_tags(
+                raw.split(b"\x00")[0].decode("cp1252", errors="ignore")
+            )
         else:
             text = raw.split(b"\x00\x00")[0].decode("utf-16le", errors="ignore")
 
@@ -163,5 +165,4 @@ def rebuild_ob1(header, entries, out_path):
     with open(out, "wb") as f:
         f.write(fs.getvalue())
 
-    print(f"[OK] Rebuilt OB1 → {out}")
     return out
