@@ -7,11 +7,11 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 
 ## 📦 Supported Games
 
-| Game | Status |  |
-|-----|------|------|
+| Game | Status |  |  |
+|-----|------|------|------|
 | Obscure 1 | Steam ✅ | Xbox ✅ | PS2 ✅
 | Obscure 2 | Steam ✅ | PS2 ✅ | PSP ✅
-| Final Exam | Steam ✅ | Xbox ✅ | PS2 ✅
+| Final Exam | Steam ✅ | Xbox ✅ | PS3 ✅
 
 # Como usar
 ## Extract
