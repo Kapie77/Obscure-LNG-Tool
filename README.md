@@ -1,9 +1,10 @@
 <div align="center">
   <h1 style="font-size: 28px; margin: 10px 0;">Obscure LNG Tool</h1>
   <p>A cross-plataform CLI tool to extract (converting them to editable formats such as .txt and .csv) and rebuild <b>.lng</b> files from <b>Obscure (2004)</b>, <b>Obscure II: The Aftermath (2007)</b> and <b>Final Exam (2013)</b>.</p>
-  <p>The new build was developed based on Heitor's [ObsCure Text Editor](https://github.com/HeitorSpectre/ObsCure-Text-Editor).</p>
 </div>
 
+The new build was developed based on Heitor's [ObsCure Text Editor](https://github.com/HeitorSpectre/ObsCure-Text-Editor).
+  
 ## Supported Games
 
 | Game | Status |  |  |  |
