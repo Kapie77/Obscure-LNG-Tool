@@ -1,7 +1,7 @@
-# Obscure LNG Tool
-
-A cross-plataform CLI tool to extract (converting them to editable formats such as .txt and .csv) and rebuild `.lng` files from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (2013)**.
-
+<div align="center">
+  <h1 style="font-size: 28px; margin: 10px 0;">Obscure LNG Tool</h1>
+  <p>A cross-plataform CLI tool to extract (converting them to editable formats such as .txt and .csv) and rebuild `.lng` files from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (2013)**.</p>
+</div>
 ---
 
 ## 📦 Supported Games
