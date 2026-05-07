@@ -2,6 +2,7 @@ import argparse
 from core.detect import detect_game
 from games.final_exam import extract_final_exam, rebuild_final_exam
 from games.obscure1 import extract_ob1, rebuild_ob1
+from games.obscure2 import extract_ob2, rebuild_ob2
 from core.txt import export_txt, parse_txt
 from core.csv import export_csv, parse_csv
 
@@ -53,6 +54,9 @@ def main():
         elif game == "ob1":
             data = extract_ob1(args.input)
 
+        elif game == "ob2":
+            data = extract_ob2(args.input)   # <<<<<< FALTAVA ISSO
+
         else:
             print(f"[ERRO] Detect failed. Game = {game}")
             return
@@ -78,16 +82,10 @@ def main():
 
         base = args.input.rsplit(".", 1)[0]
 
-        # ======================
-        # TXT
-        # ======================
         if args.input.endswith(".txt"):
             with open(args.input, encoding="utf-8") as f:
                 data = parse_txt(f.read())
 
-        # ======================
-        # CSV
-        # ======================
         elif args.input.endswith(".csv"):
             data = parse_csv(args.input)
 
@@ -103,9 +101,15 @@ def main():
 
         if game in ["ob1", "obscure1"]:
             rebuild_ob1(header, entries, output)
+            print(f"[OK] OB1 rebuild → {output}")
 
         elif game in ["finalexam", "final_exam"]:
             rebuild_final_exam(header, entries, output)
+            print(f"[OK] FINAL EXAM rebuild → {output}")
+
+        elif game in ["ob2", "obscure2"]:
+            rebuild_ob2(header, entries, output)
+            print(f"[OK] OB2 rebuild → {output}")
 
         else:
             print(f"[ERRO] jogo desconhecido: {game}")
