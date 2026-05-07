@@ -34,17 +34,19 @@ def main():
     rebuild_cmd.add_argument("-o", "--output")
 
     # ======================
-    # DRAG & DROP FIRST CHECK (ANTES DO ARGPARSE)
+    # DRAG & DROP SUPPORT
     # ======================
     if len(sys.argv) == 2 and not sys.argv[1].startswith("-"):
         file_path = sys.argv[1].strip('"')
 
+        # ======================
+        # EXTRACT (.lng)
+        # ======================
         if file_path.endswith(".lng"):
             print("\nChoose output format:")
             print("[1] TXT")
             print("[2] CSV")
             print("[3] BOTH")
-
             print("Or type: txt / csv / both\n")
 
             choice = input("Option: ").strip().lower()
@@ -57,7 +59,7 @@ def main():
                 fmt = "both"
             else:
                 print("[ERRO] invalid option")
-                return
+                sys.exit(1)
 
             args = argparse.Namespace(
                 command="extract",
@@ -66,15 +68,19 @@ def main():
                 format=fmt
             )
 
+        # ======================
+        # REBUILD (.txt / .csv)
+        # ======================
         elif file_path.endswith((".txt", ".csv")):
             args = argparse.Namespace(
                 command="rebuild",
                 input=file_path,
                 output=None
             )
+
         else:
-            print("[ERRO] unknown file:", file_path)
-            return
+            print("[ERRO] unknown file type:", file_path)
+            sys.exit(1)
     else:
         args = parser.parse_args()
 
