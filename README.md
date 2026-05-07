@@ -10,6 +10,7 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 | Game | Status |  |
 |-----|------|------|
 | Obscure 1 | Steam ✅ |
+| Obscure 2 | Steam ✅ |
 | Final Exam | Steam ✅ | Xbox ✅
 
 # Como usar
@@ -22,7 +23,9 @@ Converte .lng → arquivos editáveis:
 Exemplo:
 
 ```python obscure_lng_tool.py extract it.lng --format txt```
+
 ```python obscure_lng_tool.py extract it.lng --format csv```
+
 ```python obscure_lng_tool.py extract it.lng --format both```
 
 **Nota:**
