@@ -1,7 +1,6 @@
 # Obscure LNG Tool
 
-A cross-plataform CLI tool to **extract and rebuild `.lng` language files**
-from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (2013)**.
+A cross-plataform CLI tool to extract and rebuild `.lng` files from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (2013)**.
 
 ---
 
@@ -13,37 +12,39 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 | Obscure 2 | Steam ✅ | PS2 ✅ | PSP ✅
 | Final Exam | Steam ✅ | Xbox ✅ | PS3 ✅
 
-# Como usar
-## Extract
-Converte .lng → arquivos editáveis:
-- TXT (principal formato de tradução)
-- CSV (formato alternativo estruturado)
-- Both (gera os dois ao mesmo tempo)
+---
+# Usage
+## Windows
+### Extract:
+Just drag a file onto the executable obscure_lng_tool.exe and select the format you want (.txt, .csv or both) by entering the corresponding number or the format name.
 
-Exemplo:
+**Note:** The “translated” field in the .csv file is where you should enter the translations.
 
-```obscure_lng_tool.py extract it.lng --format txt```
+#### Rebuild
+Drag the .txt or .csv file onto obscure_lng_tool.exe, and a .new.lng file will be generated automatically.
 
-```obscure_lng_tool.py extract it.lng --format csv```
+## Linux
+### Command Line Interface (CLI)
 
-```obscure_lng_tool.py extract it.lng --format both```
+#### Extract:
+For .csv:
+```bash
+obscure_lng_tool.exe extract FILENAME.lng --format csv
+```
+For .txt:
+```bash
+obscure_lng_tool.exe extract FILENAME.lng --format txt
+```
+For both:
+```
+obscure_lng_tool.exe extract FILENAME.lng --format both
+```
 
-Gerar um .exe. Instale isso:
-```pip install pyinstaller```
-
-Agora gera o .exe:
-python -m pyinstaller --onefile obscure_lng_tool.py
-
-**Nota:**
-
-translated ← campo vazio para tradutores
-
-## Rebuild
-
-Reconstrói o .lng a partir de:
-- .txt
-- .csv
-Exemplo:
-
-```python obscure_lng_tool.py rebuild it.txt```
-```python obscure_lng_tool.py rebuild it.csv```
+#### rebuild:
+For .csv:
+```bash
+obscure_lng_tool.exe rebuild FILENAME.csv
+```
+```bash
+obscure_lng_tool.exe rebuild FILENAME.txt
+```
