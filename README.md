@@ -28,6 +28,12 @@ Exemplo:
 
 ```python obscure_lng_tool.py extract it.lng --format both```
 
+Gerar um .exe. Instale isso:
+```pip install pyinstaller```
+
+Agora gera o .exe:
+python -m pyinstaller --onefile obscure_lng_tool.py
+
 **Nota:**
 
 translated ← campo vazio para tradutores
