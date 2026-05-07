@@ -2,14 +2,13 @@
   <h1 style="font-size: 28px; margin: 10px 0;">Obscure LNG Tool</h1>
   <p>A cross-plataform CLI tool to extract (converting them to editable formats such as .txt and .csv) and rebuild <b>.lng</b> files from <b>Obscure (2004)</b>, <b>Obscure II: The Aftermath (2007)</b> and <b>Final Exam (2013)</b>.</p>
 </div>
----
 
-## 📦 Supported Games
+## Supported Games
 
-| Game | Status |  |  |
-|-----|------|------|------|
+| Game | Status |  |  |  |
+|-----|------|------|------|------|
 | Obscure 1 | Steam ✅ | Xbox ✅ | PS2 ✅
-| Obscure 2 | Steam ✅ | PS2 ✅ | PSP ✅
+| Obscure 2 | Steam ✅ | PS2 ✅ | PSP ✅ | Wii ✅
 | Final Exam | Steam ✅ | Xbox ✅ | PS3 ✅
 
 ---
