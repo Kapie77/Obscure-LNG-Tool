@@ -18,30 +18,21 @@ def export_csv(data, path):
         if game in ["finalexam", "final_exam"]:
 
             writer.writerow([
-                "index",
                 "sid",
                 "tag",
-                "original",
-                "translated"
+                "text"
             ])
 
             for entry in data.get("entries", []):
-                index = entry.get("index", 0)
                 sid = f"0x{entry.get('sid', 0):08X}"
 
                 for tag, text in entry.get("subs", []):
-                    text = text or ""
-                    text = text.replace("\n", "\\n").replace("\r", "\\r")
-
-                    if len(text) > MAX_CELL:
-                        text = text[:MAX_CELL] + "..."
+                    text = (text or "").replace("\n", "\\n").replace("\r", "\\r")
 
                     writer.writerow([
-                        index,
                         sid,
                         f"0x{tag:04X}",
-                        text,     # original
-                        ""        # tradução
+                        text
                     ])
 
         # =========================
@@ -73,6 +64,36 @@ def export_csv(data, path):
                     text,   # original
                     ""      # tradução
                 ])
+        
+        # =========================
+        # OBSCURE 2
+        # =========================
+        elif game in ["ob2", "obscure2"]:
+
+            writer.writerow([
+                "group_index",
+                "group_id",
+                "entry_index",
+                "meta",
+                "original",
+                "translated"
+            ])
+
+            for e in data.get("entries", []):
+                text = e.get("text", "") or ""
+                text = text.replace("\n", "\\n").replace("\r", "\\r")
+
+                if len(text) > MAX_CELL:
+                    text = text[:MAX_CELL] + "..."
+
+                writer.writerow([
+                    e.get("group_index", 0),
+                    e.get("group_id", 0),
+                    e.get("entry_index", 0),
+                    e.get("meta", 0),
+                    text,
+                    ""
+                ])
 
         else:
             raise ValueError(f"Unknown game type: {game}")
@@ -90,8 +111,21 @@ def parse_csv(path):
         reader = csv.DictReader(f)
         headers = reader.fieldnames or []
 
-        if "group" in headers:
+        # =========================
+        # OBSCURE 1 / OB2 / FINAL EXAM DETECTION
+        # =========================
 
+        if "group" in headers and "encoding" in headers:
+            game = "ob1"
+        elif "sid" in headers and "tag" in headers:
+            game = "finalexam"
+        else:
+            game = "ob2"
+
+        # =========================
+        # OB1
+        # =========================
+        if game == "ob1":
             for row in reader:
                 index = int(row.get("index", 0))
 
@@ -100,7 +134,7 @@ def parse_csv(path):
                     "group": int(row.get("group", 0)),
                     "id": int(row.get("id", 0)),
                     "encoding": int(row.get("encoding", 0)),
-                    "text": row.get("translated") or row.get("original") or row.get("text", "")
+                    "text": row.get("translated") or row.get("original") or ""
                 }
 
             return {
@@ -108,31 +142,34 @@ def parse_csv(path):
                 "entries": list(entries.values())
             }
 
-        return {"game": "unknown", "entries": []}
+        # =========================
+        # FINAL EXAM
+        # =========================
+        if game == "finalexam":
+            entries = {}
 
-        # ======================
-        # FINAL EXAM CSV
-        # ======================
-        for row in reader:
-            index = int(row.get("index", 0))
-            sid = int(row.get("sid", "0"), 16)
-            tag = int(row.get("tag", "0"), 16)
+            for row in reader:
+                sid = int(row["sid"], 16)
+                tag = int(row["tag"], 16)
+                text = row.get("text", "")
 
-            original = row.get("original", "")
-            translated = row.get("translated", "")
+                if sid not in entries:
+                    entries[sid] = {
+                        "sid": sid,
+                        "subs": []
+                    }
 
-            text = translated if translated.strip() else original
+                entries[sid]["subs"].append((tag, text))
 
-            if index not in entries:
-                entries[index] = {
-                    "index": index,
-                    "sid": sid,
-                    "subs": []
-                }
+            return {
+                "game": "finalexam",
+                "entries": list(entries.values())
+            }
 
-            entries[index]["subs"].append((tag, text))
-
+        # =========================
+        # OB2 (SIMPLES - fallback)
+        # =========================
         return {
-            "game": "finalexam",
-            "entries": list(entries.values())
+            "game": "ob2",
+            "entries": []
         }

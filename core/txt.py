@@ -2,6 +2,9 @@
 #          .TXT
 # ==========================
 
+import unicodedata
+
+
 # =====================
 #        PARSE
 # =====================
@@ -11,9 +14,12 @@ def parse_txt(content: str):
     header = {}
     entries = []
 
-    parts = content.split("### ENTRY")
+    blocks = content.split("### ENTRY")
 
-    header_part = parts[0] if parts else ""
+    # ======================
+    # HEADER
+    # ======================
+    header_part = blocks[0] if blocks else ""
 
     for line in header_part.split("\n"):
         line = line.strip()
@@ -21,36 +27,75 @@ def parse_txt(content: str):
             k, v = line.split("=", 1)
             header[k.strip().lower()] = v.strip()
 
-    for sec in parts[1:]:
-        sec = sec.strip()
-        if not sec:
+    # detect game EARLY
+    game_raw = header.get("game", "ob1").strip().lower()
+
+    if game_raw in ["ob2", "obscure2"]:
+        game = "ob2"
+    elif game_raw in ["ob1", "obscure1"]:
+        game = "ob1"
+    elif game_raw in ["finalexam", "final_exam"]:
+        game = "finalexam"
+    else:
+        game = game_raw
+
+    # ======================
+    # ENTRIES
+    # ======================
+    for block in blocks[1:]:
+        block = block.strip()
+        if not block:
             continue
 
-        close = sec.find("###")
-        if close == -1:
+        meta_end = block.find("###")
+        if meta_end == -1:
             continue
 
-        meta = sec[:close]
-        body = sec[close + 3:].strip()
+        meta = block[:meta_end].strip()
+        body = block[meta_end + 3:].strip()
 
         body = body.replace("\\r", "\r").replace("\\n", "\n")
 
-        entry = {
-            "index": 0,
-            "group": 0,
-            "id": 0,
-            "encoding": 0,
-            "param": 0,
-            "text": body
-        }
+        # ======================
+        # OB2 STRUCT (CRITICAL FIX)
+        # ======================
+        if game == "ob2":
+            entry = {
+                "group_index": 0,
+                "group_id": 0,
+                "entry_index": 0,
+                "meta": 0,
+                "text": body
+            }
+        else:
+            entry = {
+                "index": 0,
+                "group": 0,
+                "id": 0,
+                "encoding": 0,
+                "param": 0,
+                "text": body
+            }
 
         for line in meta.split("\n"):
             line = line.strip()
-            if "=" in line:
-                k, v = line.split("=", 1)
-                k = k.strip().lower()
-                v = v.strip()
+            if "=" not in line:
+                continue
 
+            k, v = line.split("=", 1)
+            k = k.strip().lower()
+            v = v.strip()
+
+            if game == "ob2":
+                if k == "group_index":
+                    entry["group_index"] = int(v)
+                elif k == "group_id":
+                    entry["group_id"] = int(v)
+                elif k == "entry_index":
+                    entry["entry_index"] = int(v)
+                elif k == "meta":
+                    entry["meta"] = int(v)
+            else:
                 if k == "index":
                     entry["index"] = int(v)
                 elif k == "group":
@@ -64,8 +109,6 @@ def parse_txt(content: str):
 
         entries.append(entry)
 
-    game = header.get("game", "ob1").strip().lower()
-
     return {
         "game": game,
         "header": header,
@@ -77,6 +120,7 @@ def parse_txt(content: str):
 #       EXPORT
 # =====================
 def export_txt(data, path):
+    # UTF-8 SEM BOM igual ao Obscure Text Editor
     with open(path, "w", encoding="utf-8", newline="\n") as f:
 
         game = data.get("game", "").lower()
@@ -119,6 +163,7 @@ def export_txt(data, path):
 
                 text = e.get("text", "")
                 text = text.replace("\r", "\\r").replace("\n", "\\n")
+
                 f.write(text + "\n\n")
 
         # ======================
@@ -136,3 +181,20 @@ def export_txt(data, path):
                     f.write(f"[tag=0x{tag:04X}] {text}\n")
 
                 f.write("\n")
+
+        # ======================
+        # OB2 FORMAT
+        # ======================
+        elif game == "ob2":
+            for e in data["entries"]:
+                f.write("### ENTRY\n")
+                f.write(f"group_index = {e['group_index']}\n")
+                f.write(f"group_id = {e['group_id']}\n")
+                f.write(f"entry_index = {e['entry_index']}\n")
+                f.write(f"meta = {e['meta']}\n")
+                f.write("###\n")
+
+                text = e.get("text", "")
+                text = text.replace("\r", "\\r").replace("\n", "\\n")
+
+                f.write(text + "\n\n")
