@@ -27,17 +27,30 @@ def parse_txt(content: str):
             k, v = line.split("=", 1)
             header[k.strip().lower()] = v.strip()
 
-    # detect game EARLY
-    game_raw = header.get("game", "ob1").strip().lower()
+    # ======================
+    # GAME DETECTION (ROBUST)
+    # ======================
+    game_raw = header.get("game", "").strip().lower()
 
-    if game_raw in ["ob2", "obscure2"]:
-        game = "ob2"
-    elif game_raw in ["ob1", "obscure1"]:
-        game = "ob1"
-    elif game_raw in ["finalexam", "final_exam"]:
-        game = "finalexam"
+    if not game_raw:
+        # fallback por estrutura
+        if "[tag=" in content:
+            game = "finalexam"
+        elif "encoding" in content and "group =" in content:
+            game = "ob1"
+        elif "group_index" in content:
+            game = "ob2"
+        else:
+            game = "ob1"
     else:
-        game = game_raw
+        if game_raw in ["ob2", "obscure2"]:
+            game = "ob2"
+        elif game_raw in ["ob1", "obscure1"]:
+            game = "ob1"
+        elif game_raw in ["finalexam", "final_exam"]:
+            game = "finalexam"
+        else:
+            game = game_raw
 
     # ======================
     # ENTRIES
@@ -57,9 +70,44 @@ def parse_txt(content: str):
         body = body.replace("\\r", "\r").replace("\\n", "\n")
 
         # ======================
-        # OB2 STRUCT (CRITICAL FIX)
+        # FINAL EXAM PARSER (FIX PRINCIPAL)
         # ======================
-        if game == "ob2":
+        if game == "finalexam":
+            subs = []
+
+            for line in body.split("\n"):
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                if line.startswith("[tag="):
+                    end = line.find("]")
+                    if end == -1:
+                        continue
+
+                    tag_str = line[5:end]
+                    text = line[end + 1:].strip()
+
+                    try:
+                        tag = int(tag_str, 16)
+                    except:
+                        tag = 0
+
+                    text = text.replace("\\r", "\r").replace("\\n", "\n")
+
+                    subs.append((tag, text))
+
+            entry = {
+                "index": 0,
+                "sid": 0,
+                "subs": subs
+            }
+
+        # ======================
+        # OB2 STRUCT
+        # ======================
+        elif game == "ob2":
             entry = {
                 "group_index": 0,
                 "group_id": 0,
@@ -67,6 +115,10 @@ def parse_txt(content: str):
                 "meta": 0,
                 "text": body
             }
+
+        # ======================
+        # OB1 STRUCT
+        # ======================
         else:
             entry = {
                 "index": 0,
@@ -77,6 +129,9 @@ def parse_txt(content: str):
                 "text": body
             }
 
+        # ======================
+        # META PARSING
+        # ======================
         for line in meta.split("\n"):
             line = line.strip()
             if "=" not in line:
@@ -86,7 +141,13 @@ def parse_txt(content: str):
             k = k.strip().lower()
             v = v.strip()
 
-            if game == "ob2":
+            if game == "finalexam":
+                if k == "index":
+                    entry["index"] = int(v)
+                elif k == "sid":
+                    entry["sid"] = int(v, 16)
+
+            elif game == "ob2":
                 if k == "group_index":
                     entry["group_index"] = int(v)
                 elif k == "group_id":
@@ -95,6 +156,7 @@ def parse_txt(content: str):
                     entry["entry_index"] = int(v)
                 elif k == "meta":
                     entry["meta"] = int(v)
+
             else:
                 if k == "index":
                     entry["index"] = int(v)
