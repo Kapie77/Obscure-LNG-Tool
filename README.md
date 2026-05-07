@@ -9,9 +9,9 @@ from **Obscure (2004)**, **Obscure II: The Aftermath (2007)** and **Final Exam (
 
 | Game | Status |  |
 |-----|------|------|
-| Obscure 1 | Steam ✅ |
-| Obscure 2 | Steam ✅ |
-| Final Exam | Steam ✅ | Xbox ✅
+| Obscure 1 | Steam ✅ | Xbox ✅ | PS2 ✅
+| Obscure 2 | Steam ✅ | PS2 ✅ | PSP ✅
+| Final Exam | Steam ✅ | Xbox ✅ | PS2 ✅
 
 # Como usar
 ## Extract
@@ -22,11 +22,11 @@ Converte .lng → arquivos editáveis:
 
 Exemplo:
 
-```python obscure_lng_tool.py extract it.lng --format txt```
+```obscure_lng_tool.py extract it.lng --format txt```
 
-```python obscure_lng_tool.py extract it.lng --format csv```
+```obscure_lng_tool.py extract it.lng --format csv```
 
-```python obscure_lng_tool.py extract it.lng --format both```
+```obscure_lng_tool.py extract it.lng --format both```
 
 Gerar um .exe. Instale isso:
 ```pip install pyinstaller```
