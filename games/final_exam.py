@@ -1,4 +1,5 @@
 import struct
+from io import BytesIO
 
 # ==============================
 #     FINAL EXAM (EXTRACT)
@@ -25,11 +26,17 @@ def extract_final_exam(path):
 
     entries = []
 
+    # ==============================
+    # ENTRIES TABLE
+    # ==============================
+    raw_entries = []
+
     for i in range(entry_count):
         sid = read_u32()
         sub_count = read_u32()
 
         subs = []
+
         for _ in range(sub_count):
             a = read_u32()
             b = read_u32()
@@ -39,48 +46,51 @@ def extract_final_exam(path):
 
             subs.append((tag, offset))
 
-        entries.append((sid, subs))
+        raw_entries.append((sid, subs))
 
+    # ==============================
+    # STRING BLOCK
+    # ==============================
     data_size = read_u32()
     str_data = data[pos:pos + data_size]
 
-    # extrair strings
     def read_string(offset):
         end = str_data.find(b"\x00", offset)
         if end == -1:
             end = len(str_data)
-        return str_data[offset:end].decode("cp1252", errors="ignore")
+        return str_data[offset:end].decode("utf-8", errors="replace")
 
-    result = []
-
-    for i, (sid, subs) in enumerate(entries):
+    # ==============================
+    # BUILD FINAL STRUCT
+    # ==============================
+    for i, (sid, subs) in enumerate(raw_entries):
         texts = []
+
         for tag, offset in subs:
             text = read_string(offset)
             texts.append((tag, text))
 
-        result.append({
+        entries.append({
             "index": i,
             "sid": sid,
             "subs": texts
         })
 
     return {
+        "game": "finalexam",
         "v1": v1,
         "magic": magic,
         "glyphs": glyphs,
-        "entries": result
+        "entries": entries
     }
+
 
 # ==============================
 #     FINAL EXAM (REBUILD)
 # ==============================  
 def rebuild_final_exam(header, entries, out_path):
-    import struct
-    from io import BytesIO
-
     v1 = int(header.get("v1", 1))
-    magic = int(header["magic"], 16)
+    magic = int(header.get("magic", 0))
 
     glyphs = []
     glyph_str = header.get("glyphs", "").strip()
@@ -94,6 +104,9 @@ def rebuild_final_exam(header, entries, out_path):
     data_stream = BytesIO()
     sub_records = []
 
+    # ==============================
+    # BUILD STRING TABLE
+    # ==============================
     for e in sorted(entries, key=lambda x: int(x["index"])):
         sid = e["sid"]
         subs = e["subs"]
@@ -103,7 +116,7 @@ def rebuild_final_exam(header, entries, out_path):
         for tag, text in subs:
             offset = data_stream.tell()
 
-            data_stream.write(text.encode("cp1252", errors="ignore"))
+            data_stream.write(text.encode("utf-8", errors="replace"))
             data_stream.write(b"\x00")
 
             if offset > 0x1FFFF:
@@ -115,6 +128,9 @@ def rebuild_final_exam(header, entries, out_path):
 
     str_data = data_stream.getvalue()
 
+    # ==============================
+    # WRITE FILE
+    # ==============================
     with open(out_path, "wb") as f:
         f.write(struct.pack("<I", v1))
         f.write(struct.pack("<I", magic))

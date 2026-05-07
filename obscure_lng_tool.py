@@ -1,6 +1,7 @@
 import argparse
 from core.detect import detect_game
 from games.final_exam import extract_final_exam, rebuild_final_exam
+from games.obscure1 import extract_ob1, rebuild_ob1
 from core.txt import export_txt, parse_txt
 from core.csv import export_csv, parse_csv
 
@@ -16,86 +17,98 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     # detect
-    detect_cmd = sub.add_parser("detect", help="Detect game type")
+    detect_cmd = sub.add_parser("detect")
     detect_cmd.add_argument("input")
 
-    # extract .txt
-    extract_cmd = sub.add_parser("extract", help="Extract .lng to .txt")
+    # extract
+    extract_cmd = sub.add_parser("extract")
     extract_cmd.add_argument("input")
     extract_cmd.add_argument("-o", "--output")
-
-    # extract .csv
-    extract_cmd.add_argument(
-        "--format",
-        choices=["txt", "csv", "both"],
-        default="txt"
-    )
+    extract_cmd.add_argument("--format", choices=["txt", "csv", "both"], default="txt")
 
     # rebuild
-    rebuild_cmd = sub.add_parser("rebuild", help="Rebuild .lng from .txt")
+    rebuild_cmd = sub.add_parser("rebuild")
     rebuild_cmd.add_argument("input")
     rebuild_cmd.add_argument("-o", "--output")
 
     args = parser.parse_args()
 
+    # ======================
+    # DETECT
+    # ======================
     if args.command == "detect":
-        game = detect_game(args.input)
-        print(game)
+        print(detect_game(args.input))
         return
 
-    # Extract
+    # ======================
+    # EXTRACT
+    # ======================
     if args.command == "extract":
         game = detect_game(args.input)
+        data = None
 
-        if game in ["final_exam", "finalexam"]:
+        if game == "finalexam":
             data = extract_final_exam(args.input)
 
-            base = args.input.rsplit(".", 1)[0]
+        elif game == "ob1":
+            data = extract_ob1(args.input)
 
-            # TXT
-            if args.format in ["txt", "both"]:
-                txt_out = args.output or base + ".txt"
-                export_txt(data, txt_out)
-                print(f"[OK] TXT → {txt_out}")
-
-            # CSV
-            if args.format in ["csv", "both"]:
-                csv_out = base + ".csv"
-                export_csv(data, csv_out)
-                print(f"[OK] CSV → {csv_out}")
         else:
-            print(f"[ERRO] Jogo não suportado: {game}")
+            print(f"[ERRO] Detect failed. Game = {game}")
+            return
+
+        base = args.input.rsplit(".", 1)[0]
+
+        if args.format in ["txt", "both"]:
+            txt_out = args.output or base + ".txt"
+            export_txt(data, txt_out)
+            print(f"[OK] TXT → {txt_out}")
+
+        if args.format in ["csv", "both"]:
+            csv_out = base + ".csv"
+            export_csv(data, csv_out)
+            print(f"[OK] CSV → {csv_out}")
+
         return
 
-    # Rebuild
+    # ======================
+    # REBUILD
+    # ======================
     if args.command == "rebuild":
-        if not args.output:
-            args.output = args.input.rsplit(".", 1)[0] + ".new.lng"
 
-        # CSV
-        if args.input.endswith(".csv"):
-            entries = parse_csv(args.input)
+        base = args.input.rsplit(".", 1)[0]
 
-            header = {
-                "v1": "1",
-                "magic": "0x01400000",
-                "game": "finalexam",
-                "glyphs": ""
-            }
-
+        # ======================
         # TXT
-        else:
+        # ======================
+        if args.input.endswith(".txt"):
             with open(args.input, encoding="utf-8") as f:
-                header, entries = parse_txt(f.read())
+                data = parse_txt(f.read())
 
-        game = header.get("game", "").lower()
+        # ======================
+        # CSV
+        # ======================
+        elif args.input.endswith(".csv"):
+            data = parse_csv(args.input)
 
-        if game in ["finalexam", "final_exam"]:
-            output = rebuild_final_exam(header, entries, args.output)
-            print(f"[OK] Rebuilt → {output}")
         else:
-            print(f"[ERRO] Jogo não suportado no input: {game}")
-        return
+            print("[ERRO] formato desconhecido")
+            return
+
+        header = data.get("header", {})
+        entries = data.get("entries", [])
+        game = data.get("game", "").lower()
+
+        output = args.output or base + ".new.lng"
+
+        if game in ["ob1", "obscure1"]:
+            rebuild_ob1(header, entries, output)
+
+        elif game in ["finalexam", "final_exam"]:
+            rebuild_final_exam(header, entries, output)
+
+        else:
+            print(f"[ERRO] jogo desconhecido: {game}")
 
 
 if __name__ == "__main__":
