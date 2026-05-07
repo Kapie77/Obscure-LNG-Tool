@@ -1,6 +1,14 @@
 import struct
 from io import BytesIO
 
+def parse_int(v):
+    if isinstance(v, int):
+        return v
+    if v is None:
+        return 0
+    v = str(v).strip()
+    return int(v, 16) if v.lower().startswith("0x") else int(v)
+
 # ==============================
 #     FINAL EXAM (EXTRACT)
 # ==============================      
@@ -89,8 +97,9 @@ def extract_final_exam(path):
 #     FINAL EXAM (REBUILD)
 # ==============================  
 def rebuild_final_exam(header, entries, out_path):
-    v1 = int(header.get("v1", 1))
-    magic = int(header.get("magic", 0))
+
+    v1 = parse_int(header.get("v1", 1))
+    magic = parse_int(header.get("magic", 0))
 
     glyphs = []
     glyph_str = header.get("glyphs", "").strip()
@@ -99,7 +108,7 @@ def rebuild_final_exam(header, entries, out_path):
         for g in glyph_str.split(","):
             g = g.strip()
             if g:
-                glyphs.append(int(g, 16))
+                glyphs.append(parse_int(g))
 
     data_stream = BytesIO()
     sub_records = []
@@ -108,7 +117,9 @@ def rebuild_final_exam(header, entries, out_path):
     # BUILD STRING TABLE
     # ==============================
     for e in sorted(entries, key=lambda x: int(x["index"])):
-        sid = e["sid"]
+        sid = parse_int(e.get("sid", 0))
+        if sid is None:
+            raise Exception(f"Missing SID in entry index {e.get('index')}")
         subs = e["subs"]
 
         converted = []
