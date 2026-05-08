@@ -18,21 +18,30 @@ def export_csv(data, path):
         if game in ["finalexam", "final_exam"]:
 
             writer.writerow([
+                "index",
                 "sid",
                 "tag",
-                "text"
+                "original",
+                "translated"
             ])
 
             for entry in data.get("entries", []):
+                index = entry.get("index", 0)
                 sid = f"0x{entry.get('sid', 0):08X}"
 
                 for tag, text in entry.get("subs", []):
-                    text = (text or "").replace("\n", "\\n").replace("\r", "\\r")
+                    text = text or ""
+                    text = text.replace("\n", "\\n").replace("\r", "\\r")
+
+                    if len(text) > MAX_CELL:
+                        text = text[:MAX_CELL] + "..."
 
                     writer.writerow([
+                        index,
                         sid,
                         f"0x{tag:04X}",
-                        text
+                        text,
+                        ""   # translated
                     ])
 
         # =========================
